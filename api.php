@@ -47,13 +47,6 @@ if_debug('User data:', $userid);
 // User cookiefile instead:
 curl_setopt( $curl, CURLOPT_COOKIEFILE, $tmpfname);
 
-/* Get user id, other method:
-$request = json_decode('{"keys":{"session.authentication_session.party_ref.ref":""}}');
-curl_setopt( $curl, CURLOPT_POSTFIELDS, json_encode($request));
-curl_setopt( $curl, CURLOPT_URL, "https://sl.se/MittSL/Boomerang.Api6/Client/Service/Session.asmx/GetValues");
-$userid = json_decode(curl_exec($curl))->d->{'session.authentication_session.party_ref.ref'};
-if_debug('User data:', $userid);*/
-
 // Get user cards:
 curl_setopt( $curl, CURLOPT_POSTFIELDS, ""); 
 curl_setopt( $curl, CURLOPT_POST, false); 
