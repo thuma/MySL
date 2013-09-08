@@ -56,9 +56,17 @@ if_debug('Cards:', $cards);
 
 // Get value of each card:
 foreach($cards as $key => $card){
+	
+	// Get all products for card:
 	curl_setopt( $curl, CURLOPT_URL, "https://sl.se/ext/mittsl/api/".$card->travel_card->href.".json");
-	$cards[$key]->travel_card->card_values = json_decode(curl_exec($curl))->result_data;
+	$cards[$key]->travel_card = json_decode(curl_exec($curl))->result_data->travel_card;
 	if_debug('Card:'.$key, $cards[$key]);
+	
+	// Get transaktions of card:
+	curl_setopt( $curl, CURLOPT_URL, "https://sl.se/ext/mittsl/api/travel_card_transaction?serial_number=".$card->travel_card->serial_number."&start=".date('Y-m-d',(time()-1296000))."&end=".date('Y-m-d')."&limit=10&skip=0");
+	$cards[$key]->travel_card->travel_card_transaction_list = json_decode(curl_exec($curl))->result_data->travel_card_transaction_list;
+	if_debug('Trips:'.$key, $cards[$key]);
+
 }
 
 // Loggout again:
