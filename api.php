@@ -15,14 +15,17 @@ $_GET['password'] = preg_replace('/"/', '', $_GET['password']);
 
 // Auth user:
 $curl = curl_init("https://sl.se/api/MySL/Authenticate");
-curl_setopt( $curl, CURLOPT_HTTPHEADER, 'Content-Type: application/json;charset=UTF-8');
-$request = json_decode('{"username":'.$_GET['username'].',"password":'.$_GET['password'].'}');
+curl_setopt( $curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json;charset=UTF-8'));
+$request = json_decode('{"username":"'.$_GET['username'].'","password":"'.$_GET['password'].'"}');
 curl_setopt( $curl, CURLOPT_POST, true); 
 curl_setopt( $curl, CURLOPT_POSTFIELDS, json_encode($request));
 curl_setopt( $curl, CURLOPT_COOKIEJAR, $tmpfname);
 curl_setopt( $curl, CURLOPT_RETURNTRANSFER, true);
 $login = json_decode(curl_exec($curl));
-if_debug('Login',$login);
+
+if($login->data != '/sv/mitt-sl/konto/'){
+	die('{"error":"login failed, check user and password"}');
+}
 
 // User cookiefile instead:
 curl_setopt( $curl, CURLOPT_COOKIEFILE, $tmpfname);
@@ -31,12 +34,11 @@ curl_setopt( $curl, CURLOPT_COOKIEFILE, $tmpfname);
 curl_setopt( $curl, CURLOPT_POSTFIELDS, ""); 
 curl_setopt( $curl, CURLOPT_POST, false); 
 curl_setopt( $curl, CURLOPT_URL, "https://sl.se/api/ECommerse/GetShoppingCart");
-$cards = json_decode(curl_exec($curl))->result_data->travel_card_list;
-if_debug('Cards:', $cards);
+$all = json_decode(curl_exec($curl));
 
 // Loggout again:
-curl_setopt( $curl, CURLOPT_URL, "https://sl.se/sv/Resenar/Mitt-SL/Logga-ut/");
-if_debug('Logout:'.$key, curl_exec($curl));
+curl_setopt( $curl, CURLOPT_URL, "https://sl.se/api/MySL/Logout");
+$logout = curl_exec($curl);
 
 // Close curl and kill remove cookie file:
 curl_close($curl);
