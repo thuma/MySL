@@ -32,20 +32,9 @@ if(is_file('accounts/'.md5($_POST['from']).'.json'))
 	else //If all ok print card info;
 		{
 		print "Dina kort:";
-		foreach($alldata->cards as $card)
+		foreach($alldata->data->UserTravelCards as $card)
 			{
-			print "\n".$card->travel_card->name." ";
-			print $card->travel_card->detail->purse_value."Kr";
-			if(isset($card->travel_card->detail->products)) // If thre is a time period on the card print it:
-				{
-				foreach($card->travel_card->detail->products as $product) // Find the currently active period.
-					{
-					if($product->active) // If active print date.
-						{
-						print " Period:".$product->end_date;
-						}
-					}
-				}
+			print "\n".$card->Name."\n";
 			}
 		}
 	}
