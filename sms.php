@@ -34,7 +34,7 @@ if(is_file('accounts/'.md5($_POST['from']).'.json'))
 		print "Dina kort:";
 		foreach($alldata->data->UserTravelCards as $card)
 			{
-			print "\n".$card->Name."\n";
+			print "\n".$card->Name." ".$card->PurseValue."Kr";
 			}
 		}
 	}
