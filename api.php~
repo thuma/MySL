@@ -1,0 +1,83 @@
+<?php
+header('Content-type: application/json; charset=UTF-8');
+
+// Generate temp coockie:
+$tmpfname = tempnam("/tmp", "coockie");
+
+// Check input:
+if(isset($_GET['username']) == FALSE OR isset($_GET['password']) == FALSE){
+	die('{"error":"no username / password supplied"}');
+}
+
+// Handle username and password:
+$_GET['username'] = preg_replace('/"/', '', $_GET['username']);
+$_GET['password'] = preg_replace('/"/', '', $_GET['password']);
+
+MySL Login:
+--data-binary 
+
+MySL allinfo:
+https://sl.se/api/ECommerse/GetShoppingCart
+// Auth user:
+$curl = curl_init("https://sl.se/api/MySL/Authenticate");
+curl_setopt( $curl, CURLOPT_HTTPHEADER, 'Content-Type: application/json;charset=UTF-8');
+$request = json_decode('{"username":'.$_GET['username'].',"password":'.$_GET['password'].'}');
+curl_setopt( $curl, CURLOPT_POST, true); 
+curl_setopt( $curl, CURLOPT_POSTFIELDS, json_encode($request));
+curl_setopt( $curl, CURLOPT_COOKIEJAR, $tmpfname);
+curl_setopt( $curl, CURLOPT_RETURNTRANSFER, true);
+$login = json_decode(curl_exec($curl));
+if_debug('Login',$login);
+
+// User cookiefile instead:
+curl_setopt( $curl, CURLOPT_COOKIEFILE, $tmpfname);
+
+// Get user cards:
+curl_setopt( $curl, CURLOPT_POSTFIELDS, ""); 
+curl_setopt( $curl, CURLOPT_POST, false); 
+curl_setopt( $curl, CURLOPT_URL, "https://sl.se/ext/mittsl/api/travel_card.json?queryproperty=owner.ref&value=".$userid);
+$cards = json_decode(curl_exec($curl))->result_data->travel_card_list;
+if_debug('Cards:', $cards);
+
+// Get value of each card:
+foreach($cards as $key => $card){
+	
+	// Get all products for card:
+	curl_setopt( $curl, CURLOPT_URL, "https://sl.se/ext/mittsl/api/".$card->travel_card->href.".json");
+	$cards[$key]->travel_card = json_decode(curl_exec($curl))->result_data->travel_card;
+	if_debug('Card:'.$key, $cards[$key]);
+	
+	// Get transaktions of card:
+	curl_setopt( $curl, CURLOPT_URL, "https://sl.se/ext/mittsl/api/travel_card_transaction?serial_number=".$card->travel_card->serial_number."&start=".date('Y-m-d',(time()-1296000))."&end=".date('Y-m-d')."&limit=10&skip=0");
+	$cards[$key]->travel_card->travel_card_transaction_list = json_decode(curl_exec($curl))->result_data->travel_card_transaction_list;
+	if_debug('Trips:'.$key, $cards[$key]);
+
+}
+
+// Loggout again:
+curl_setopt( $curl, CURLOPT_URL, "https://sl.se/sv/Resenar/Mitt-SL/Logga-ut/");
+if_debug('Logout:'.$key, curl_exec($curl));
+
+// Close curl and kill remove cookie file:
+curl_close($curl);
+unlink($tmpfname);
+
+// combine user data and cards:
+$all->user = $login->result_data->authentication_session->party_ref;
+$all->cards = $cards;
+
+// Output the data to the user:
+print json_encode($all);
+
+// Function to print debugg data:
+function if_debug($text,$data){
+	if(isset($_GET['debug']))
+		{	
+		print $text."\n";
+		print_r($data);
+		print "\n";
+		}
+}
+
+?>
+
