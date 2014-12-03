@@ -21,8 +21,12 @@ curl_setopt( $curl, CURLOPT_POST, true);
 curl_setopt( $curl, CURLOPT_POSTFIELDS, json_encode($request));
 curl_setopt( $curl, CURLOPT_COOKIEJAR, $tmpfname);
 curl_setopt( $curl, CURLOPT_RETURNTRANSFER, true);
-$login = json_decode(curl_exec($curl));
+curl_setopt( $curl, CURLOPT_SSL_VERIFYHOST, false); 
+curl_setopt( $curl, CURLOPT_SSL_VERIFYPEER, false);
+$data = curl_exec($curl);
+$login = json_decode($data);
 
+// Check if login success:
 if($login->data != '/sv/mitt-sl/konto/'){
 	die('{"error":"login failed, check user and password"}');
 }
